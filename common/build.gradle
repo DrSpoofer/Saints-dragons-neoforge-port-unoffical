@@ -1,0 +1,53 @@
+architectury {
+    common rootProject.enabled_platform.split(',')
+}
+
+loom {
+    accessWidenerPath = file("src/main/resources/saintsdragons.accesswidener")
+}
+
+repositories {
+    maven {
+        name = 'GeckoLib'
+        url = 'https://dl.cloudsmith.io/public/geckolib3/geckolib/maven/'
+        content {
+            includeGroupByRegex("software\\.bernie.*")
+            includeGroup("com.eliotlash.mclib")
+        }
+    }
+}
+
+dependencies {
+    // Mappings
+    mappings loom.officialMojangMappings()
+
+    // Fabric Loader is only needed on common compile classpath for @Environment and mixin metadata.
+    // Keep it compileOnly so Forge classpaths stay clean at runtime.
+    compileOnly "net.fabricmc:fabric-loader:${rootProject.fabric_loader_version}"
+
+    // GeckoLib's Fabric-facing entity types expose Fabric API interface injections.
+    // Keep the API compile-only here; the Fabric module provides it at runtime.
+    modCompileOnly "net.fabricmc.fabric-api:fabric-api:${rootProject.fabric_api_version}"
+
+    // GeckoLib common
+    modImplementation "software.bernie.geckolib:geckolib-fabric-1.20.1:${rootProject.geckolib_version}"
+
+    // Optional JEI integration. The API is available to compile against but is never bundled.
+    modCompileOnly "mezz.jei:jei-${rootProject.minecraft_version}-common-api:${rootProject.jei_version}"
+
+    // Optional EMI integration. Architectury remaps the intermediary API for each target platform.
+    modCompileOnly "dev.emi:emi-xplat-intermediary:${rootProject.emi_version}:api"
+
+    // JSR305 for @Nullable/@Nonnull annotations
+    compileOnly "com.google.code.findbugs:jsr305:3.0.2"
+
+    testImplementation platform("org.junit:junit-bom:5.10.2")
+    testImplementation "org.junit.jupiter:junit-jupiter"
+    testImplementation "org.mockito:mockito-core:5.11.0"
+}
+
+tasks.named('test') {
+    useJUnitPlatform()
+    // Loom's development Minecraft classes expose compile-only Fabric interfaces.
+    classpath += sourceSets.main.compileClasspath
+}

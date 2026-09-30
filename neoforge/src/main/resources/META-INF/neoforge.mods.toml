@@ -1,0 +1,43 @@
+modLoader="javafml"
+loaderVersion="${loader_version_range}"
+license="MIT (source code); see LICENSE.md for assets"
+logoFile="assets/saintsdragons/saintsdragons.png"
+
+[[mods]]
+modId="saintsdragons"
+version="${version}"
+displayName="Saint's Dragons"
+displayURL="https://raevyx.miraheze.org/wiki/Main_Page"
+authors="Leon Saint"
+description='''Adds animated dragons and wyverns to Minecraft.'''
+
+[[mixins]]
+config="saintsdragons.mixins.json"
+
+[[dependencies.saintsdragons]]
+modId="neoforge"
+type="required"
+versionRange="${neo_version_range}"
+ordering="NONE"
+side="BOTH"
+
+[[dependencies.saintsdragons]]
+modId="minecraft"
+type="required"
+versionRange="${minecraft_version_range}"
+ordering="NONE"
+side="BOTH"
+
+[[dependencies.saintsdragons]]
+modId="geckolib"
+type="required"
+versionRange="[${geckolib_version},5)"
+ordering="BEFORE"
+side="BOTH"
+
+[[dependencies.saintsdragons]]
+modId="emi"
+type="optional"
+versionRange="[1.1.24,)"
+ordering="AFTER"
+side="CLIENT"

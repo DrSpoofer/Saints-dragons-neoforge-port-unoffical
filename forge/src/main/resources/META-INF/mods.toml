@@ -1,0 +1,42 @@
+modLoader="javafml"
+loaderVersion="${loader_version_range}"
+license="MIT"
+logoFile="assets/saintsdragons/saintsdragons.png"
+
+[[mods]]
+modId="saintsdragons"
+version="${version}"
+displayName="Saint's Dragons"
+displayURL="https://raevyx.miraheze.org/wiki/Main_Page"
+description='''
+i can write whatever i want. what are you gonna do? throw shoes at me?
+'''
+authors="Leon Saint"
+
+[[dependencies.saintsdragons]]
+modId="forge"
+mandatory=true
+versionRange="${forge_version_range}"
+ordering="NONE"
+side="BOTH"
+
+[[dependencies.saintsdragons]]
+modId="minecraft"
+mandatory=true
+versionRange="${minecraft_version_range}"
+ordering="NONE"
+side="BOTH"
+
+[[dependencies.saintsdragons]]
+modId="geckolib"
+mandatory=true
+versionRange="[4.8.1,)"
+ordering="BEFORE"
+side="BOTH"
+
+[[dependencies.saintsdragons]]
+modId="emi"
+mandatory=false
+versionRange="[1.1.22,)"
+ordering="AFTER"
+side="CLIENT"

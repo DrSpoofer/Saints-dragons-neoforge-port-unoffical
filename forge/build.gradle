@@ -1,0 +1,170 @@
+plugins {
+    id 'com.gradleup.shadow'
+}
+
+sourceSets {
+    dataGenerator {
+        java.srcDir 'src/datagen/java'
+        compileClasspath = sourceSets.main.output + sourceSets.main.compileClasspath
+        runtimeClasspath = output + compileClasspath + sourceSets.main.runtimeClasspath
+    }
+}
+
+loom {
+    forge {
+        mixinConfig "saintsdragons.mixins.json"
+    }
+
+    runs {
+        client {
+            property 'mixin.env.remapRefMap', 'true'
+            property 'mixin.env.refMapRemappingFile', "${projectDir}/build/createSrgToMcp/output.srg"
+            client()
+            setConfigName("Forge Client")
+            ideConfigGenerated(true)
+            runDir("../run")
+            programArgs("--username", "DevPlayer")
+        }
+        server {
+            server()
+            setConfigName("Forge Server")
+            ideConfigGenerated(true)
+            runDir("../run")
+            programArgs("--nogui")
+        }
+        data {
+            data()
+            source sourceSets.dataGenerator
+            mainClass.set("com.leon.saintsdragons.forge.datagen.ForgeDataGenBootstrap")
+            setConfigName("Forge Data")
+            ideConfigGenerated(true)
+            runDir("../run-data")
+            programArgs(
+                    "--mod", project.rootProject.mod_id.toString(),
+                    "--all",
+                    "--output", file("../common/src/generated/resources").absolutePath,
+                    "--existing", file("../common/src/main/resources").absolutePath
+            )
+        }
+    }
+}
+
+architectury {
+    platformSetupLoomIde()
+    forge()
+}
+
+configurations {
+    common {
+        canBeResolved = true
+        canBeConsumed = false
+    }
+    compileClasspath.extendsFrom common
+    runtimeClasspath.extendsFrom common
+    developmentForge.extendsFrom common
+
+    shadowBundle {
+        canBeResolved = true
+        canBeConsumed = false
+    }
+}
+
+repositories {
+    maven {
+        url = "https://api.modrinth.com/maven"
+    }
+    maven {
+        name = 'GeckoLib'
+        url = 'https://dl.cloudsmith.io/public/geckolib3/geckolib/maven/'
+        content {
+            includeGroupByRegex("software\\.bernie.*")
+            includeGroup("com.eliotlash.mclib")
+        }
+    }
+    maven { url = "https://cursemaven.com" }
+}
+
+dependencies {
+    mappings loom.officialMojangMappings()
+
+    forge "net.minecraftforge:forge:${rootProject.minecraft_version}-${rootProject.forge_version}"
+
+    // Compile-only bridge for Fabric @Environment metadata that can appear on shared/common deps.
+    // This avoids javac "unknown enum constant EnvType.CLIENT" warnings in Forge builds.
+    compileOnly "net.fabricmc:fabric-loader:${rootProject.fabric_loader_version}"
+
+    // Common module
+    common(project(path: ':common', configuration: 'namedElements')) { transitive = false }
+    shadowBundle(project(path: ':common', configuration: 'transformProductionForge')) { transitive = false }
+
+    // GeckoLib Forge
+    modImplementation "software.bernie.geckolib:geckolib-forge-${rootProject.minecraft_version}:${rootProject.geckolib_version}"
+    forgeRuntimeLibrary("com.eliotlash.mclib:mclib:20")
+
+    // Jade integration (optional)
+    modCompileOnly "maven.modrinth:jade:${rootProject.jade_forge_version}"
+
+    // EMI integration (optional API only). JEI remains the local development runtime viewer.
+    modCompileOnly "dev.emi:emi-forge:${rootProject.emi_version}:api"
+
+    // Optional JEI integration: API-only for production, full mod in local development.
+    modCompileOnly "mezz.jei:jei-${rootProject.minecraft_version}-common-api:${rootProject.jei_version}"
+    modCompileOnly "mezz.jei:jei-${rootProject.minecraft_version}-forge-api:${rootProject.jei_version}"
+    modLocalRuntime "mezz.jei:jei-${rootProject.minecraft_version}-forge:${rootProject.jei_version}"
+
+}
+
+processResources {
+    inputs.properties(
+            version: project.version,
+            minecraft_version_range: rootProject.minecraft_version_range,
+            forge_version_range: rootProject.forge_version_range,
+            loader_version_range: rootProject.loader_version_range
+    )
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+
+    filesMatching('META-INF/mods.toml') {
+        expand(
+                version: project.version,
+                minecraft_version_range: rootProject.minecraft_version_range,
+                forge_version_range: rootProject.forge_version_range,
+                loader_version_range: rootProject.loader_version_range
+        )
+    }
+
+    // Ensure the mod logo is included for Forge (dev and built jars)
+    from("$rootDir/common/src/main/resources/assets/saintsdragons/saintsdragons.png") {
+        into "assets/saintsdragons"
+    }
+}
+
+sourceSets {
+    main {
+        resources.srcDirs = [
+                'src/main/resources',
+                '../common/src/main/resources',
+                '../common/src/generated/resources'
+        ]
+    }
+}
+
+shadowJar {
+    exclude "fabric.mod.json"
+    exclude "architectury.common.json"
+
+    configurations = [project.configurations.shadowBundle]
+    archiveClassifier = "dev-shadow"
+}
+
+remapJar {
+    archiveFileName.set("saintsdragons-${project.version}+forge-${rootProject.minecraft_version}.jar")
+    inputFile.set(shadowJar.archiveFile)
+}
+
+sourcesJar {
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+
+    def commonSources = project(":common").tasks.named("sourcesJar")
+    dependsOn(commonSources)
+    from(commonSources.flatMap { it.archiveFile }.map { zipTree(it) })
+}

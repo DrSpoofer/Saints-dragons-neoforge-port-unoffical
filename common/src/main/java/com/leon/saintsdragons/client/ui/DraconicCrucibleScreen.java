@@ -1,0 +1,181 @@
+package com.leon.saintsdragons.client.ui;
+
+import com.leon.saintsdragons.common.SaintsDragonsCommon;
+import com.leon.saintsdragons.server.menu.DraconicCrucibleMenu;
+import com.mojang.blaze3d.systems.RenderSystem;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.components.AbstractWidget;
+import net.minecraft.client.gui.narration.NarrationElementOutput;
+import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
+import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.entity.player.Inventory;
+import org.jetbrains.annotations.NotNull;
+
+import static com.leon.saintsdragons.common.block.crucible.DraconicCrucibleUiLayout.*;
+
+public class DraconicCrucibleScreen extends AbstractContainerScreen<DraconicCrucibleMenu> {
+    private static final ResourceLocation TEXTURE =
+            SaintsDragonsCommon.rl("textures/gui/draconic_crucible_gui.png");
+
+    private CrucibleButton crucibleButton;
+
+    public DraconicCrucibleScreen(DraconicCrucibleMenu menu, Inventory inventory, Component title) {
+        super(menu, inventory, title);
+        this.imageWidth = WIDTH;
+        this.imageHeight = HEIGHT;
+    }
+
+    @Override
+    protected void init() {
+        super.init();
+        this.crucibleButton = this.addRenderableWidget(new CrucibleButton(
+                this.leftPos + BUTTON_X,
+                this.topPos + BUTTON_Y,
+                this::pressCrucibleButton));
+    }
+
+    @Override
+    protected void renderBg(@NotNull GuiGraphics guiGraphics, float partialTick, int mouseX, int mouseY) {
+        RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
+        guiGraphics.blit(TEXTURE, this.leftPos, this.topPos, 0, 0,
+                this.imageWidth, this.imageHeight, 256, 256);
+        int arrowFillHeight = getArrowFillHeight();
+        if (arrowFillHeight > 0) {
+            int arrowOffset = ARROW_HEIGHT - arrowFillHeight;
+            guiGraphics.blit(TEXTURE,
+                    this.leftPos + ARROW_X,
+                    this.topPos + ARROW_Y + arrowOffset,
+                    ARROW_U,
+                    ARROW_V + arrowOffset,
+                    ARROW_WIDTH,
+                    arrowFillHeight,
+                    256,
+                    256);
+        }
+        int gaugeFillHeight = getGaugeFillHeight();
+        if (gaugeFillHeight > 0) {
+            int gaugeOffset = GAUGE_HEIGHT - gaugeFillHeight;
+            guiGraphics.blit(TEXTURE,
+                    this.leftPos + GAUGE_X,
+                    this.topPos + GAUGE_Y + gaugeOffset,
+                    GAUGE_U,
+                    GAUGE_V + gaugeOffset,
+                    GAUGE_WIDTH,
+                    gaugeFillHeight,
+                    256,
+                    256);
+        }
+        if (this.menu.isProcessing()) {
+            int panelX = this.leftPos + PANEL_X;
+            int panelY = this.topPos + PANEL_Y;
+            guiGraphics.blit(TEXTURE, panelX, panelY, PANEL_U, PANEL_V,
+                    PANEL_WIDTH, PANEL_HEIGHT, 256, 256);
+            int barFillHeight = getBarFillHeight();
+            if (barFillHeight > 0) {
+                int barOffset = BAR_HEIGHT - barFillHeight;
+                guiGraphics.blit(TEXTURE,
+                        panelX + BAR_X,
+                        panelY + BAR_Y + barOffset,
+                        BAR_U,
+                        BAR_V + barOffset,
+                        BAR_WIDTH,
+                        barFillHeight,
+                        256,
+                        256);
+            }
+        }
+    }
+
+    @Override
+    protected void renderLabels(@NotNull GuiGraphics guiGraphics, int mouseX, int mouseY) {
+    }
+
+    private int getGaugeFillHeight() {
+        int charge = this.menu.getBurnTime();
+        if (charge <= 0) {
+            return 0;
+        }
+
+        int level1Charge = this.menu.getTierChargeCapacity(1);
+        int level2Charge = this.menu.getTierChargeCapacity(2);
+        int level3Charge = this.menu.getTierChargeCapacity(3);
+        return gaugeFillHeight(charge, level1Charge, level2Charge, level3Charge);
+    }
+
+    private int getArrowFillHeight() {
+        int total = this.menu.getProcessingTimeTotal();
+        if (!this.menu.isProcessing() || total <= 0) {
+            return 0;
+        }
+        return Math.min(ARROW_HEIGHT,
+                (ARROW_HEIGHT * this.menu.getProcessingProgress() + total - 1) / total);
+    }
+
+    private int getBarFillHeight() {
+        int total = this.menu.getProcessingTimeTotal();
+        if (!this.menu.isProcessing() || total <= 0) {
+            return 0;
+        }
+        return Math.min(BAR_HEIGHT,
+                (BAR_HEIGHT * this.menu.getProcessingProgress() + total - 1) / total);
+    }
+
+    private void pressCrucibleButton() {
+        if (this.menu.canStartProcessing() && this.minecraft != null && this.minecraft.gameMode != null) {
+            this.minecraft.gameMode.handleInventoryButtonClick(this.menu.containerId, 0);
+        }
+    }
+
+    @Override
+    public void render(@NotNull GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
+        if (this.crucibleButton != null) {
+            this.crucibleButton.active = this.menu.canStartProcessing();
+        }
+        // 1.21: AbstractContainerScreen#render draws the background before its widgets.
+        super.render(guiGraphics, mouseX, mouseY, partialTick);
+        this.renderTooltip(guiGraphics, mouseX, mouseY);
+    }
+
+    private static final class CrucibleButton extends AbstractWidget {
+        private final Runnable onPress;
+        private boolean pressed;
+
+        private CrucibleButton(int x, int y, Runnable onPress) {
+            super(x, y, BUTTON_WIDTH, BUTTON_HEIGHT,
+                    Component.translatable("gui.saintsdragons.draconic_crucible.button"));
+            this.onPress = onPress;
+        }
+
+        @Override
+        protected void renderWidget(@NotNull GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
+            int v = !this.active
+                    ? BUTTON_DEFAULT_V
+                    : (this.pressed
+                    ? BUTTON_CLICKED_V
+                    : (this.isHovered() ? BUTTON_HIGHLIGHTED_V : BUTTON_DEFAULT_V));
+            if (!this.active) {
+                RenderSystem.setShaderColor(0.45F, 0.45F, 0.45F, 1.0F);
+            }
+            guiGraphics.blit(TEXTURE, this.getX(), this.getY(), BUTTON_U, v,
+                    BUTTON_WIDTH, BUTTON_HEIGHT, 256, 256);
+            RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
+        }
+
+        @Override
+        public void onClick(double mouseX, double mouseY) {
+            this.pressed = true;
+            this.onPress.run();
+        }
+
+        @Override
+        public void onRelease(double mouseX, double mouseY) {
+            this.pressed = false;
+        }
+
+        @Override
+        protected void updateWidgetNarration(@NotNull NarrationElementOutput narrationOutput) {
+            this.defaultButtonNarrationText(narrationOutput);
+        }
+    }
+}

@@ -1,0 +1,20 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "SSS",
+    "SCS",
+    "SSS"
+  ],
+  "key": {
+    "S": {
+      "item": "saintsdragons:cindervane_scale"
+    },
+    "C": {
+      "item": "saintsdragons:dragon_binder_core"
+    }
+  },
+  "result": {
+    "id": "saintsdragons:cindervane_binder",
+    "count": 1
+  }
+}

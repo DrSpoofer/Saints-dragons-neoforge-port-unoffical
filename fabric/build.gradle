@@ -1,0 +1,136 @@
+plugins {
+    id 'com.gradleup.shadow'
+}
+
+architectury {
+    platformSetupLoomIde()
+    fabric()
+}
+
+configurations.configureEach {
+    resolutionStrategy {
+        force("net.fabricmc:fabric-loader:$fabric_loader_version")
+    }
+}
+
+configurations {
+    common {
+        canBeResolved = true
+        canBeConsumed = false
+    }
+    compileClasspath.extendsFrom common
+    runtimeClasspath.extendsFrom common
+    developmentFabric.extendsFrom common
+
+    // Files in this configuration will be bundled into your mod using the Shadow plugin.
+    // Don't use the `shadow` configuration from the plugin itself as it's meant for excluding files.
+    shadowBundle {
+        canBeResolved = true
+        canBeConsumed = false
+    }
+}
+
+repositories {
+    maven {
+        url = "https://api.modrinth.com/maven"
+    }
+    maven {
+        url = "https://maven.shedaniel.me/"
+    }
+    maven {
+        name = 'TerraformersMC'
+        url = 'https://maven.terraformersmc.com/releases/'
+    }
+    maven {
+        name = 'JamiesWhiteShirt'
+        url = 'https://maven.jamieswhiteshirt.com/libs-release/'
+    }
+    maven {
+        name = 'GeckoLib'
+        url = 'https://dl.cloudsmith.io/public/geckolib3/geckolib/maven/'
+        content {
+            includeGroupByRegex("software\\.bernie.*")
+            includeGroup("com.eliotlash.mclib")
+        }
+    }
+    maven { url = "https://cursemaven.com" }
+}
+
+dependencies {
+    mappings loom.officialMojangMappings()
+
+    modImplementation "net.fabricmc:fabric-loader:$rootProject.fabric_loader_version"
+    modImplementation "net.fabricmc.fabric-api:fabric-api:$rootProject.fabric_api_version"
+    modImplementation include("com.jamieswhiteshirt:reach-entity-attributes:2.4.0")
+    modImplementation("software.bernie.geckolib:geckolib-fabric-${minecraft_version}:${geckolib_version}")
+    modApi include("me.shedaniel.cloth:cloth-config-fabric:${rootProject.cloth_config_version}") {
+        exclude group: "net.fabricmc.fabric-api"
+    }
+    modCompileOnly "dev.emi:emi-fabric:${rootProject.emi_version}:api"
+    modCompileOnly "maven.modrinth:jade:${rootProject.jade_fabric_version}"
+
+    // ModMenu integration - Cloth Config will automatically provide the config screen
+    modImplementation "com.terraformersmc:modmenu:${rootProject.modmenu_version}"
+    common(project(path: ':common', configuration: 'namedElements')) { transitive = false }
+    shadowBundle(project(path: ':common', configuration: 'transformProductionFabric')) { transitive = false }
+
+    // Optional JEI integration: API-only for production, full mod in local development.
+    modCompileOnly "mezz.jei:jei-${rootProject.minecraft_version}-common-api:${rootProject.jei_version}"
+    modCompileOnly "mezz.jei:jei-${rootProject.minecraft_version}-fabric-api:${rootProject.jei_version}"
+    modLocalRuntime "mezz.jei:jei-${rootProject.minecraft_version}-fabric:${rootProject.jei_version}"
+}
+
+processResources {
+    exclude('META-INF/mods.toml')
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+
+    inputs.property 'version', project.version
+    inputs.property 'cloth_config_version', rootProject.cloth_config_version
+
+    filesMatching('fabric.mod.json') {
+        expand(
+                version: project.version,
+                minecraft_version: rootProject.minecraft_version,
+                fabric_loader_version: rootProject.fabric_loader_version,
+                fabric_api_version: rootProject.fabric_api_version,
+                cloth_config_version: rootProject.cloth_config_version
+        )
+    }
+
+    from(project(":common").file("src/main/resources/saintsdragons.accesswidener"))
+}
+
+shadowJar {
+    configurations = [project.configurations.shadowBundle]
+    archiveClassifier = 'dev-shadow'
+}
+
+remapJar {
+    archiveFileName.set("saintsdragons-${project.version}+fabric-${rootProject.minecraft_version}.jar")
+    inputFile.set(shadowJar.archiveFile)
+}
+
+sourcesJar {
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+
+    def commonSources = project(":common").tasks.named("sourcesJar")
+    dependsOn(commonSources)
+    from(commonSources.flatMap { it.archiveFile }.map { zipTree(it) })
+}
+
+sourceSets {
+    main {
+        java.srcDirs = ['src/main/java']
+        resources.srcDirs = [
+                'src/main/resources',
+                '../common/src/main/resources',
+                '../common/src/generated/resources'
+        ]
+    }
+}
+
+components.java {
+    withVariantsFromConfiguration(project.configurations.shadowRuntimeElements) {
+        skip()
+    }
+}

@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "   ",
+    " W ",
+    "W  "
+  ],
+  "key": {
+    "W": {
+      "item": "saintsdragons:worldroot_ingot"
+    }
+  },
+  "result": {
+    "id": "saintsdragons:scale_plucker",
+    "count": 1
+  }
+}

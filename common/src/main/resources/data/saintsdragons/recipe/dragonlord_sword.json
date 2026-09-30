@@ -1,0 +1,28 @@
+{
+  "type": "saintsdragons:draconic_crucible",
+  "pattern": [
+    "  T",
+    "AI ",
+    "SA "
+  ],
+  "key": {
+    "I": {
+      "item": "saintsdragons:ignivorus_scale"
+    },
+    "T": {
+      "item": "saintsdragons:ignivorus_tooth"
+    },
+    "A": {
+      "item": "saintsdragons:dragonheart_alloy"
+    },
+    "S": {
+      "item": "minecraft:stick"
+    }
+  },
+  "result": {
+    "id": "saintsdragons:dragonlord_sword",
+    "count": 1
+  },
+  "required_heat_level": 3,
+  "processing_time": 1800
+}

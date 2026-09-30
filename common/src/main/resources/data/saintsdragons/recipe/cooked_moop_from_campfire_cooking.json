@@ -1,0 +1,12 @@
+{
+  "type": "minecraft:campfire_cooking",
+  "category": "food",
+  "ingredient": {
+    "item": "saintsdragons:raw_moop"
+  },
+  "result": {
+    "id": "saintsdragons:cooked_moop"
+  },
+  "experience": 0.35,
+  "cookingtime": 600
+}

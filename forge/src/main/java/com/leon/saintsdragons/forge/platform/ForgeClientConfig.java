@@ -1,0 +1,52 @@
+package com.leon.saintsdragons.forge.platform;
+
+import net.neoforged.neoforge.common.ModConfigSpec;
+
+public final class ForgeClientConfig {
+    public static final ModConfigSpec CLIENT_SPEC;
+
+    public static ModConfigSpec.BooleanValue FIRST_PERSON_BANKING_CAMERA_ENABLED;
+    public static ModConfigSpec.BooleanValue RAEVYX_BEAM_FIRST_PERSON_ENABLED;
+    public static ModConfigSpec.BooleanValue THIRD_PERSON_BANKING_CAMERA_ENABLED;
+    public static ModConfigSpec.BooleanValue DIVE_CAMERA_WOBBLE_ENABLED;
+    public static ModConfigSpec.BooleanValue DIVE_SPEED_LINES_ENABLED;
+    public static ModConfigSpec.BooleanValue GENERIC_DIVE_LOOP_ENABLED;
+    public static ModConfigSpec.IntValue SWARM_BATTLE_MUSIC_VOLUME;
+
+    static {
+        ModConfigSpec.Builder builder = new ModConfigSpec.Builder();
+
+        builder.comment("Local client-only settings").push("client");
+        RAEVYX_BEAM_FIRST_PERSON_ENABLED = builder
+                .comment("Automatically switch to the first-person beam camera while riding a beaming Raevyx; disable to keep the normal riding camera")
+                .define("raevyx_beam_first_person", true);
+        FIRST_PERSON_BANKING_CAMERA_ENABLED = builder
+                .comment("Enable first-person banking and barrel-roll camera effects while riding dragons")
+                .define("first_person_banking_camera", true);
+        THIRD_PERSON_BANKING_CAMERA_ENABLED = builder
+                .comment("Enable the lateral third-person camera offset caused by dragon banking")
+                .define("third_person_banking_camera", true);
+        DIVE_CAMERA_WOBBLE_ENABLED = builder
+                .comment("Enable camera wobble while diving quickly on flying dragons")
+                .define("dive_camera_wobble", true);
+        DIVE_SPEED_LINES_ENABLED = builder
+                .comment("Enable screen edge speed lines while diving quickly on flying dragons")
+                .define("dive_speed_lines", true);
+        GENERIC_DIVE_LOOP_ENABLED = builder
+                .comment("Enable the local generic wind loop while riding diving flying dragons")
+                .define("generic_dive_loop", true);
+        SWARM_BATTLE_MUSIC_VOLUME = builder
+                .comment("Local Draconian Swarm battle music volume, in percent")
+                .defineInRange("swarm_battle_music_volume", 100, 0, 100);
+        builder.pop();
+
+        CLIENT_SPEC = builder.build();
+    }
+
+    public static boolean isRaevyxBeamFirstPersonEnabled() {
+        return RAEVYX_BEAM_FIRST_PERSON_ENABLED == null || RAEVYX_BEAM_FIRST_PERSON_ENABLED.get();
+    }
+
+    private ForgeClientConfig() {
+    }
+}

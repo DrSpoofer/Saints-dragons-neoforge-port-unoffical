@@ -1,0 +1,22 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "RV ",
+    "FR "
+  ],
+  "key": {
+    "F": {
+      "item": "minecraft:feather"
+    },
+    "V": {
+      "item": "saintsdragons:volitans_spine"
+    },
+    "R": {
+      "item": "minecraft:red_dye"
+    }
+  },
+  "result": {
+    "id": "saintsdragons:arrow_of_venom",
+    "count": 1
+  }
+}

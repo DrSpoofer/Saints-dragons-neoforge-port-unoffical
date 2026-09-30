@@ -1,0 +1,36 @@
+{
+  "required": true,
+  "package": "com.leon.saintsdragons.forge.mixin",
+  "compatibilityLevel": "JAVA_17",
+  "mixins": [
+    "ChunkGeneratorStructureStateMixin",
+    "IgnivorusMultipartMixin",
+    "LivingEntityMixin",
+    "NameTagItemMixin",
+    "PlayerMixin",
+    "RangedAttributeAccessor",
+    "RedStoneWireBlockMixin",
+    "StructureTemplateEntityMixin"
+  ],
+  "client": [
+    "client.AirDismountInputMixin",
+    "client.CameraMixin",
+    "client.CameraPositionMixin",
+    "client.GameRendererMixin",
+    "client.RiderMixin",
+    "client.BloodTempestAfterimagePlayerRendererMixin",
+    "client.BloodTempestAfterimageLivingRendererMixin",
+    "client.BloodTempestAfterimageModelMixin",
+    "client.BloodTempestAfterimageItemRendererMixin",
+    "client.LivingEntityRendererMixin",
+    "client.InventoryScreenMixin",
+    "client.EntityTurnMixin",
+    "client.DragonPartAttackMixin",
+    "client.DragonPartInteractionMixin"
+  ],
+  "server": [],
+  "injectors": {
+    "defaultRequire": 1
+  },
+  "minVersion": "0.8"
+}

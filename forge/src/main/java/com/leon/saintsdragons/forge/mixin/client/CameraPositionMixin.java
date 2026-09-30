@@ -1,0 +1,165 @@
+package com.leon.saintsdragons.forge.mixin.client;
+
+import com.leon.saintsdragons.client.camera.DragonRideCameraTuning;
+import com.leon.saintsdragons.client.renderer.DragonSeatAnchoredCamera;
+import com.leon.saintsdragons.client.renderer.RiderBullcrap;
+import com.leon.saintsdragons.client.renderer.RiderConfig;
+import com.leon.saintsdragons.forge.client.camera.CameraLeanData;
+import com.leon.saintsdragons.forge.client.camera.DragonCameraState;
+import com.leon.saintsdragons.forge.client.event.ClientEventHandler;
+import com.leon.saintsdragons.forge.platform.ForgeClientConfig;
+import com.leon.saintsdragons.server.entity.base.RideableDragonBase;
+import com.leon.saintsdragons.server.entity.dragons.cindervane.Cindervane;
+import com.leon.saintsdragons.server.entity.dragons.ignivorus.Ignivorus;
+import com.leon.saintsdragons.server.entity.dragons.raevyx.Raevyx;
+import com.leon.saintsdragons.server.entity.dragons.volitans.Volitans;
+import net.minecraft.client.Camera;
+import net.minecraft.util.Mth;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.level.BlockGetter;
+import net.minecraft.world.phys.Vec3;
+import org.joml.Vector3f;
+import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+
+@Mixin(Camera.class)
+public abstract class CameraPositionMixin {
+    @Shadow
+    private Vector3f up;
+
+    @Shadow
+    private Vector3f forwards;
+
+    @Shadow
+    private Vector3f left;
+
+    @Shadow
+    public abstract void setPosition(double x, double y, double z);
+
+    @Shadow
+    public abstract void setPosition(Vec3 pos);
+
+    @Inject(method = "setup", at = @At("HEAD"), require = 1)
+    private void saintsdragons$preSetupSyncRoll(BlockGetter level, Entity entity, boolean detached, boolean thirdPersonReverse, float partialTick, CallbackInfo ci) {
+        if (entity == null || detached || !isFirstPersonBankingCameraEnabled()) {
+            DragonCameraState.clearRoll();
+            CameraLeanData.reset();
+            return;
+        }
+
+        Entity vehicle = entity.getVehicle();
+        if (!(vehicle instanceof RideableDragonBase dragon) || !DragonSeatAnchoredCamera.supports(dragon)) {
+            DragonCameraState.clearRoll();
+            CameraLeanData.reset();
+            return;
+        }
+        if (!usesAerialBankingCamera(dragon)) {
+            DragonCameraState.clearRoll();
+            CameraLeanData.reset();
+            return;
+        }
+        if (dragon instanceof Raevyx raevyx && raevyx.isBeaming()
+                && ForgeClientConfig.isRaevyxBeamFirstPersonEnabled()) {
+            DragonCameraState.clearRoll();
+            CameraLeanData.reset();
+            return;
+        }
+
+        float rollDegrees = getBodyRollDegrees(dragon, partialTick);
+        float pitchDegrees = Mth.lerp(partialTick, dragon.xRotO, dragon.getXRot());
+        float yawSpeed = Mth.wrapDegrees(dragon.yBodyRot - dragon.yBodyRotO);
+        CameraLeanData.updateTarget(rollDegrees, pitchDegrees, yawSpeed, 1.0f);
+        CameraLeanData.update();
+
+        float cameraTilt = (float) CameraLeanData.getCameraTilt();
+        DragonCameraState.setCurrentRoll(-rollDegrees + cameraTilt);
+    }
+
+    @Inject(method = "setup", at = @At("TAIL"), require = 1)
+    private void saintsdragons$postSetupSaddlePosition(BlockGetter level, Entity entity, boolean detached, boolean thirdPersonReverse, float partialTick, CallbackInfo ci) {
+        saintsdragons$applySaddlePosition(entity, detached, partialTick);
+        // 1.20.1 Forge posted ComputeCameraAngles here, after setup; NeoForge 21.1 posts it before the
+        // camera is positioned, so the rider camera's position work runs from this point instead.
+        ClientEventHandler.onCameraSetupComplete((Camera) (Object) this, partialTick);
+    }
+
+    private void saintsdragons$applySaddlePosition(Entity entity, boolean detached, float partialTick) {
+        if (entity == null || detached) {
+            return;
+        }
+
+        Entity vehicle = entity.getVehicle();
+        if (!(vehicle instanceof RideableDragonBase dragon) || !DragonSeatAnchoredCamera.supports(dragon)) {
+            return;
+        }
+        if (dragon instanceof Raevyx raevyx && raevyx.isBeaming()
+                && ForgeClientConfig.isRaevyxBeamFirstPersonEnabled()) {
+            return;
+        }
+
+        RiderConfig.RiderSpec riderSpec = RiderConfig.getSpec(dragon);
+        if (riderSpec == null) {
+            return;
+        }
+        Vec3 saddleOffset = RiderBullcrap.getCameraOffset(
+                dragon,
+                DragonSeatAnchoredCamera.getSeatIndex(dragon, entity),
+                riderSpec.staleMs
+        );
+        if (!DragonSeatAnchoredCamera.isValidSeatOffset(saddleOffset)) {
+            return;
+        }
+
+        double leanX = CameraLeanData.getLeanX();
+        double leanY = CameraLeanData.getLeanY();
+        double leanZ = CameraLeanData.getLeanZ();
+        this.setPosition(DragonSeatAnchoredCamera.computePivot(
+                dragon,
+                entity,
+                saddleOffset,
+                this.up,
+                this.forwards,
+                this.left,
+                partialTick,
+                leanX,
+                leanY,
+                leanZ
+        ));
+    }
+
+    private static boolean isFirstPersonBankingCameraEnabled() {
+        return ForgeClientConfig.FIRST_PERSON_BANKING_CAMERA_ENABLED == null
+                || ForgeClientConfig.FIRST_PERSON_BANKING_CAMERA_ENABLED.get();
+    }
+
+    private static boolean usesAerialBankingCamera(RideableDragonBase dragon) {
+        return dragon.isFlying()
+                || dragon.isTakeoff()
+                || dragon.isLanding()
+                || dragon.isHovering();
+    }
+
+    private static float getBodyRollDegrees(RideableDragonBase dragon, float partialTick) {
+        Float registeredAngle = DragonRideCameraTuning
+                .getRegisteredBankAngle(dragon, partialTick);
+        if (registeredAngle != null) {
+            return Float.isFinite(registeredAngle) ? registeredAngle : 0.0F;
+        }
+        if (dragon instanceof Raevyx raevyx) {
+            return raevyx.getBankAngleDegrees(partialTick) + raevyx.getSmoothedRoll(partialTick) * Mth.RAD_TO_DEG;
+        }
+        if (dragon instanceof Cindervane cindervane) {
+            return cindervane.getBankAngleDegrees(partialTick) + cindervane.getSmoothedRoll(partialTick) * Mth.RAD_TO_DEG;
+        }
+        if (dragon instanceof Ignivorus ignivorus) {
+            return ignivorus.getBankAngleDegrees(partialTick) + ignivorus.getSmoothedRoll(partialTick) * Mth.RAD_TO_DEG;
+        }
+        if (dragon instanceof Volitans volitans) {
+            return volitans.getBankAngleDegrees(partialTick) + volitans.getSmoothedRoll(partialTick) * Mth.RAD_TO_DEG;
+        }
+        return 0.0f;
+    }
+}

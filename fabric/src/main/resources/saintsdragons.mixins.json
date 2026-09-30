@@ -1,0 +1,39 @@
+{
+  "required": true,
+  "minVersion": "0.8",
+  "package": "com.leon.saintsdragons.fabric.mixin.fabric",
+  "refmap": "saintsdragons-fabric-fabric-refmap.json",
+  "compatibilityLevel": "JAVA_17",
+  "client": [
+    "AirDismountInputMixin",
+    "CameraMixin",
+    "CameraRollMixin",
+    "GameRendererMixin",
+    "RiderMixin",
+    "BloodTempestAfterimagePlayerRendererMixin",
+    "BloodTempestAfterimageLivingRendererMixin",
+    "BloodTempestAfterimageModelMixin",
+    "BloodTempestAfterimageItemRendererMixin",
+    "LivingEntityRendererMixin",
+    "InventoryScreenMixin",
+    "EntityRendererMixin",
+    "EntityTurnMixin",
+    "EntityRenderDispatcherMixin",
+    "ParticleEngineMixin",
+    "GuiMixin",
+    "DragonPartAttackMixin",
+    "DragonPartInteractionMixin"
+  ],
+  "mixins": [
+    "ChunkGeneratorStructureStateMixin",
+    "NameTagItemMixin",
+    "LivingEntityMixin",
+    "PathfinderMobMixin",
+    "PlayerMixin",
+    "RedStoneWireBlockMixin",
+    "StructureTemplateEntityMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}

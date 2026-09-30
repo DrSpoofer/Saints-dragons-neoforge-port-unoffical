@@ -1,0 +1,253 @@
+package com.leon.saintsdragons.forge.data;
+
+import com.leon.saintsdragons.common.SaintsDragonsCommon;
+import com.leon.saintsdragons.common.registry.ConventionalTags;
+import com.leon.saintsdragons.common.registry.ModArmors;
+import com.leon.saintsdragons.common.registry.ModItems;
+import com.leon.saintsdragons.common.registry.ModTags;
+import net.minecraft.core.registries.Registries;
+import net.minecraft.core.HolderLookup;
+import net.minecraft.data.PackOutput;
+import net.minecraft.data.tags.ItemTagsProvider;
+import net.minecraft.data.tags.TagsProvider;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.tags.ItemTags;
+import net.minecraft.tags.TagKey;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.level.block.Block;
+import net.neoforged.neoforge.common.data.ExistingFileHelper;
+import org.jetbrains.annotations.NotNull;
+
+import java.util.concurrent.CompletableFuture;
+import net.neoforged.neoforge.common.Tags;
+
+public final class SaintsDragonItemTagsProvider extends ItemTagsProvider {
+    private static final TagKey<Item> MINECRAFT_EGGS = TagKey.create(
+            Registries.ITEM,
+            ResourceLocation.fromNamespaceAndPath("minecraft", "eggs")
+    );
+
+    public SaintsDragonItemTagsProvider(
+            PackOutput output,
+            CompletableFuture<HolderLookup.Provider> lookupProvider,
+            CompletableFuture<TagsProvider.TagLookup<Block>> blockTags,
+            ExistingFileHelper existingFileHelper
+    ) {
+        super(output, lookupProvider, blockTags, SaintsDragonsCommon.MOD_ID, existingFileHelper);
+    }
+
+    @Override
+    protected void addTags(@NotNull HolderLookup.Provider provider) {
+        copy(ModTags.Blocks.ATROXIIA_EGGS, ModTags.Items.ATROXIIA_EGGS);
+        copy(ModTags.Blocks.CINDERVANE_EGGS, ModTags.Items.CINDERVANE_EGGS);
+        copy(ModTags.Blocks.IGNIVORUS_EGGS, ModTags.Items.IGNIVORUS_EGGS);
+        copy(ModTags.Blocks.RAEVYX_EGGS, ModTags.Items.RAEVYX_EGGS);
+        copy(ModTags.Blocks.STEGONAUT_EGGS, ModTags.Items.STEGONAUT_EGGS);
+        copy(ModTags.Blocks.VARASUCHUS_EGGS, ModTags.Items.VARASUCHUS_EGGS);
+        copy(ModTags.Blocks.VOLITANS_EGGS, ModTags.Items.VOLITANS_EGGS);
+
+        tag(ModTags.Items.DRAGON_EGGS)
+                .addTag(ModTags.Items.ATROXIIA_EGGS)
+                .addTag(ModTags.Items.CINDERVANE_EGGS)
+                .addTag(ModTags.Items.IGNIVORUS_EGGS)
+                .addTag(ModTags.Items.RAEVYX_EGGS)
+                .addTag(ModTags.Items.STEGONAUT_EGGS)
+                .addTag(ModTags.Items.VARASUCHUS_EGGS)
+                .addTag(ModTags.Items.VOLITANS_EGGS);
+
+        tag(ModTags.Items.DRAGON_BINDERS)
+                .add(ModItems.ATROXIIA_BINDER.get())
+                .add(ModItems.CINDERVANE_BINDER.get())
+                .add(ModItems.IGNIVORUS_BINDER.get())
+                .add(ModItems.RAEVYX_BINDER.get())
+                .add(ModItems.STEGONAUT_BINDER.get())
+                .add(ModItems.VARASUCHUS_BINDER.get())
+                .add(ModItems.VOLITANS_BINDER.get())
+                .add(ModItems.NULLJAW_BINDER.get());
+
+        tag(ModTags.Items.DRAGON_BRUSHES)
+                .add(ModItems.DRAGON_BRUSH.get())
+                .add(ModItems.GOLDEN_DRAGON_BRUSH.get());
+
+        tag(ItemTags.SWORDS)
+                .add(ModItems.WORLDROOT_SWORD.get())
+                .add(ModItems.BLOOD_TEMPEST_KATANA.get())
+                .add(ModItems.DRAGONLORD_SWORD.get());
+        tag(ItemTags.PICKAXES)
+                .add(ModItems.WORLDROOT_PICKAXE.get());
+        tag(ItemTags.AXES)
+                .add(ModItems.WORLDROOT_AXE.get());
+        tag(ItemTags.SHOVELS)
+                .add(ModItems.WORLDROOT_SHOVEL.get());
+        tag(ItemTags.HOES)
+                .add(ModItems.WORLDROOT_HOE.get());
+
+        tag(ModTags.Items.WORLDROOT_TOOLS)
+                .add(ModItems.WORLDROOT_SWORD.get())
+                .add(ModItems.WORLDROOT_PICKAXE.get())
+                .add(ModItems.WORLDROOT_AXE.get())
+                .add(ModItems.WORLDROOT_SHOVEL.get())
+                .add(ModItems.WORLDROOT_HOE.get());
+
+        tag(ModTags.Items.DRAGON_PARTS)
+                .add(ModItems.ATROXIIA_SCALE.get())
+                .add(ModItems.CINDERVANE_SCALE.get())
+                .add(ModItems.IGNIVORUS_SCALE.get())
+                .add(ModItems.RAEVYX_SCALE.get())
+                .add(ModItems.STEGONAUT_SCALE.get())
+                .add(ModItems.VARASUCHUS_SCALE.get())
+                .add(ModItems.VOLITANS_SCALE.get())
+                .add(ModItems.IGNIVORUS_TOOTH.get())
+                .add(ModItems.IGNIVORUS_HEART.get())
+                .add(ModItems.VOLITANS_SPINE.get())
+                .add(ModItems.RAEVYX_WING_HIDE.get())
+                .add(ModItems.IGNIVORUS_WING_HIDE.get())
+                .add(ModItems.RAEVYX_WINGTALON.get());
+
+        tag(ModTags.Items.DRAGON_DROPS)
+                .addTag(ModTags.Items.DRAGON_PARTS)
+                .addTag(ModTags.Items.DRAGON_EGGS);
+
+        tag(ModTags.Items.DRAGON_SPAWN_EGGS)
+                .add(ModItems.CINDERVANE_SPAWN_EGG.get())
+                .add(ModItems.IGNIVORUS_SPAWN_EGG.get())
+                .add(ModItems.NULLJAW_SPAWN_EGG.get())
+                .add(ModItems.RAEVYX_SPAWN_EGG.get())
+                .add(ModItems.STEGONAUT_SPAWN_EGG.get())
+                .add(ModItems.VARASUCHUS_SPAWN_EGG.get())
+                .add(ModItems.VOLITANS_SPAWN_EGG.get())
+                .add(ModItems.MOSSBACK_SPAWN_EGG.get())
+                .add(ModItems.ATROXIIA_SPAWN_EGG.get());
+
+        tag(ModTags.Items.DRACONIC_CRUCIBLE_FUEL_LEVEL_1)
+                .add(Items.COAL)
+                .add(Items.CHARCOAL);
+
+        tag(ModTags.Items.DRACONIC_CRUCIBLE_FUEL_LEVEL_2)
+                .add(Items.BLAZE_POWDER)
+                .add(ModItems.SEARING_COAL.get());
+
+        tag(ModTags.Items.DRACONIC_CRUCIBLE_FUEL_LEVEL_3)
+                .add(ModItems.IGNIVORUS_HEART.get())
+                .add(Items.DRAGON_BREATH);
+
+        tag(ModTags.Items.DRACONIC_CRUCIBLE_VANILLA_SMELTING_BLACKLIST);
+
+        tag(ModTags.Items.ATROXIIA_FOODS)
+                .add(Items.BEEF)
+                .add(Items.CHICKEN)
+                .add(Items.COD)
+                .add(Items.MUTTON)
+                .add(Items.PORKCHOP)
+                .add(Items.SALMON)
+                .add(ModItems.HEARTY_DRAGON_MEAL.get());
+
+        tag(ModTags.Items.CINDERVANE_FOODS)
+                .add(Items.CHICKEN)
+                .add(Items.COD)
+                .add(Items.SALMON)
+                .add(ModItems.HEARTY_DRAGON_MEAL.get());
+
+        tag(ModTags.Items.IGNIVORUS_FOODS)
+                .add(Items.BEEF)
+                .add(Items.COD)
+                .add(Items.MUTTON)
+                .add(Items.PORKCHOP)
+                .add(Items.SALMON)
+                .add(ModItems.HEARTY_DRAGON_MEAL.get());
+
+        tag(ModTags.Items.NULLJAW_FOODS)
+                .add(Items.CHORUS_FRUIT);
+
+        tag(ModTags.Items.RAEVYX_FOODS)
+                .add(Items.COD)
+                .add(Items.MUTTON)
+                .add(Items.PORKCHOP)
+                .add(Items.SALMON)
+                .add(ModItems.HEARTY_DRAGON_MEAL.get());
+
+        tag(ModTags.Items.STEGONAUT_FOODS)
+                .add(Items.BEEF)
+                .add(Items.CHICKEN)
+                .add(Items.COD)
+                .add(Items.MUTTON)
+                .add(Items.PORKCHOP)
+                .add(Items.SALMON)
+                .add(ModItems.HEARTY_DRAGON_MEAL.get());
+
+        tag(ModTags.Items.VARASUCHUS_FOODS)
+                .add(Items.BEEF)
+                .add(Items.COD)
+                .add(Items.SALMON)
+                .add(Items.TROPICAL_FISH)
+                .add(ModItems.HEARTY_DRAGON_MEAL.get());
+
+        tag(ModTags.Items.VOLITANS_FOODS)
+                .add(Items.COD)
+                .add(Items.PUFFERFISH)
+                .add(Items.SALMON)
+                .add(Items.TROPICAL_FISH)
+                .add(ModItems.HEARTY_DRAGON_MEAL.get());
+
+        tag(ModTags.Items.DRAGON_FOODS)
+                .addTag(ModTags.Items.ATROXIIA_FOODS)
+                .addTag(ModTags.Items.CINDERVANE_FOODS)
+                .addTag(ModTags.Items.IGNIVORUS_FOODS)
+                .addTag(ModTags.Items.NULLJAW_FOODS)
+                .addTag(ModTags.Items.RAEVYX_FOODS)
+                .addTag(ModTags.Items.STEGONAUT_FOODS)
+                .addTag(ModTags.Items.VARASUCHUS_FOODS)
+                .addTag(ModTags.Items.VOLITANS_FOODS);
+
+        tag(ItemTags.ARROWS).add(ModItems.ARROW_OF_VENOM.get());
+        tag(MINECRAFT_EGGS).addTag(ModTags.Items.DRAGON_EGGS);
+        tag(ItemTags.FISHES).add(ModItems.RAW_MOOP.get());
+        tag(Tags.Items.MUSIC_DISCS).add(ModItems.BLEEDING_BOLT_MUSIC_DISC.get());
+        tag(Tags.Items.MUSIC_DISCS).add(ModItems.MOSSBACK_MUSIC_MUSIC_DISC.get());
+        tag(ItemTags.TRIMMABLE_ARMOR)
+                .add(ModArmors.DRACONIAN_HELMET.get())
+                .add(ModArmors.DRACONIAN_CHESTPLATE.get())
+                .add(ModArmors.DRACONIAN_LEGGINGS.get())
+                .add(ModArmors.DRACONIAN_BOOTS.get());
+
+        tag(ConventionalTags.Items.ARMOR_HELMETS)
+                .add(ModArmors.DRACONIAN_HELMET.get())
+                .add(ModArmors.BLOOD_TEMPEST_HELMET.get())
+                .add(ModArmors.DRAGONLORD_HELMET.get());
+        tag(ConventionalTags.Items.ARMOR_CHESTPLATES)
+                .add(ModArmors.DRACONIAN_CHESTPLATE.get())
+                .add(ModArmors.BLOOD_TEMPEST_CHESTPLATE.get())
+                .add(ModArmors.DRAGONLORD_CHESTPLATE.get());
+        tag(ConventionalTags.Items.ARMOR_LEGGINGS)
+                .add(ModArmors.DRACONIAN_LEGGINGS.get())
+                .add(ModArmors.BLOOD_TEMPEST_LEGGINGS.get())
+                .add(ModArmors.DRAGONLORD_LEGGINGS.get());
+        tag(ConventionalTags.Items.ARMOR_BOOTS)
+                .add(ModArmors.DRACONIAN_BOOTS.get())
+                .add(ModArmors.BLOOD_TEMPEST_BOOTS.get())
+                .add(ModArmors.DRAGONLORD_BOOTS.get());
+        // 1.21 armor enchantability (Protection, Unbreaking, Mending, ...) is driven by these slot tags.
+        tag(ItemTags.HEAD_ARMOR)
+                .add(ModArmors.DRACONIAN_HELMET.get())
+                .add(ModArmors.BLOOD_TEMPEST_HELMET.get())
+                .add(ModArmors.DRAGONLORD_HELMET.get());
+        tag(ItemTags.CHEST_ARMOR)
+                .add(ModArmors.DRACONIAN_CHESTPLATE.get())
+                .add(ModArmors.BLOOD_TEMPEST_CHESTPLATE.get())
+                .add(ModArmors.DRAGONLORD_CHESTPLATE.get());
+        tag(ItemTags.LEG_ARMOR)
+                .add(ModArmors.DRACONIAN_LEGGINGS.get())
+                .add(ModArmors.BLOOD_TEMPEST_LEGGINGS.get())
+                .add(ModArmors.DRAGONLORD_LEGGINGS.get());
+        tag(ItemTags.FOOT_ARMOR)
+                .add(ModArmors.DRACONIAN_BOOTS.get())
+                .add(ModArmors.BLOOD_TEMPEST_BOOTS.get())
+                .add(ModArmors.DRAGONLORD_BOOTS.get());
+        tag(ConventionalTags.Items.ARMORS)
+                .addTag(ConventionalTags.Items.ARMOR_HELMETS)
+                .addTag(ConventionalTags.Items.ARMOR_CHESTPLATES)
+                .addTag(ConventionalTags.Items.ARMOR_LEGGINGS)
+                .addTag(ConventionalTags.Items.ARMOR_BOOTS);
+    }
+}

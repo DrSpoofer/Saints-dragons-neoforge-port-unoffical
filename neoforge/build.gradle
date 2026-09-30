@@ -1,0 +1,136 @@
+plugins {
+    id 'java-library'
+    id 'net.neoforged.moddev'
+}
+
+base { archivesName = 'saintsdragons' }
+java {
+    toolchain.languageVersion = JavaLanguageVersion.of(21)
+    withSourcesJar()
+}
+
+repositories {
+    mavenCentral()
+    maven {
+        name = 'GeckoLib'
+        url = 'https://dl.cloudsmith.io/public/geckolib3/geckolib/maven/'
+        content { includeGroupByRegex('software\\.bernie.*'); includeGroup('com.eliotlash.mclib') }
+    }
+    maven { url = 'https://maven.blamejared.com/'; content { includeGroup('mezz.jei') } }
+    maven { url = 'https://maven.terraformersmc.com/releases/'; content { includeGroup('dev.emi') } }
+    maven { url = 'https://api.modrinth.com/maven'; content { includeGroup('maven.modrinth') } }
+}
+
+// Every production Java file remains compiled. The original platform abstraction
+// stays in place; its implementation in forge/src targets NeoForge 1.21.1.
+sourceSets {
+    main {
+        java.srcDirs = ['../common/src/main/java', '../forge/src/main/java']
+        resources.srcDirs = []
+    }
+    test { java.srcDirs = ['../common/src/test/java'] }
+    dataGenerator {
+        java.srcDirs = ['../forge/src/datagen/java']
+        compileClasspath += sourceSets.main.output
+        runtimeClasspath += sourceSets.main.output
+    }
+}
+configurations {
+    dataGeneratorImplementation.extendsFrom implementation
+    dataGeneratorCompileOnly.extendsFrom compileOnly
+    dataGeneratorRuntimeOnly.extendsFrom runtimeOnly
+}
+
+neoForge {
+    version = rootProject.neo_version
+    validateAccessTransformers = true
+    // Resources are assembled explicitly below, so register this input explicitly.
+    accessTransformers.from(file('src/main/resources/META-INF/accesstransformer.cfg'))
+    addModdingDependenciesTo(sourceSets.dataGenerator)
+    runs {
+        client {
+            client()
+            // Optional local integration testing: -PclientGameDir=<dir> uses another game directory
+            // (for example one with extra third-party mods), leaving run/client untouched.
+            gameDirectory = file(project.findProperty('clientGameDir') ?: '../run/client')
+            // Optional local smoke testing: -PquickPlayWorld=<save name> loads that world directly.
+            if (project.hasProperty('quickPlayWorld')) {
+                programArguments.addAll('--quickPlaySingleplayer', project.property('quickPlayWorld').toString())
+            }
+        }
+        server {
+            server()
+            programArgument '--nogui'
+            gameDirectory = file('../run/server')
+        }
+    }
+    mods {
+        saintsdragons { sourceSet(sourceSets.main) }
+    }
+}
+
+dependencies {
+    implementation "software.bernie.geckolib:geckolib-neoforge-${rootProject.minecraft_version}:${rootProject.geckolib_version}"
+    compileOnly 'com.google.code.findbugs:jsr305:3.0.2'
+    compileOnly "mezz.jei:jei-${rootProject.minecraft_version}-common-api:${rootProject.jei_version}"
+    compileOnly "mezz.jei:jei-${rootProject.minecraft_version}-neoforge-api:${rootProject.jei_version}"
+    compileOnly "dev.emi:emi-neoforge:${rootProject.emi_version}:api"
+    compileOnly "maven.modrinth:jade:${rootProject.jade_version}"
+    testImplementation platform('org.junit:junit-bom:5.10.2')
+    testImplementation 'org.junit.jupiter:junit-jupiter'
+    testImplementation 'org.mockito:mockito-core:5.11.0'
+}
+
+tasks.named('processResources', ProcessResources) {
+    duplicatesStrategy = DuplicatesStrategy.FAIL
+    def metadata = [version: project.version,
+                    minecraft_version_range: rootProject.minecraft_version_range,
+                    neo_version_range: rootProject.neo_version_range,
+                    loader_version_range: rootProject.loader_version_range,
+                    geckolib_version: rootProject.geckolib_version]
+    inputs.properties(metadata)
+    from('../common/src/main/resources') {
+        exclude('pack.mcmeta', 'saintsdragons.accesswidener', 'architectury.common.json')
+        // Original Forge processResources gives its loader-specific tag priority.
+        exclude('data/minecraft/tags/damage_type/is_lightning.json')
+    }
+    from('../common/src/generated/resources') { exclude('.cache/**') }
+    from('../forge/src/main/resources') {
+        exclude('META-INF/mods.toml', 'META-INF/accesstransformer.cfg', 'pack.mcmeta', 'saintsdragons.mixins.json')
+    }
+    from('src/main/resources') {
+        filesMatching('META-INF/neoforge.mods.toml') { expand(metadata) }
+    }
+    from('../forge/src/main/resources/saintsdragons.mixins.json') {
+        // 1.21.1 NeoForge uses named targets; keep every original injection.
+        filter { line -> line.replace('"JAVA_17"', '"JAVA_21"') }
+        filter { line -> line.replace('  "minVersion": "0.8",', '  "minVersion": "0.8"') }
+        filter { line -> line.contains('"refmap":') ? null : line }
+    }
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.release = 21
+    options.encoding = 'UTF-8'
+    options.compilerArgs += ['-Xmaxerrs', '5000', '-Xmaxwarns', '5000']
+    if (project.hasProperty('lintDeprecation')) { options.compilerArgs += ['-Xlint:deprecation'] }
+}
+tasks.named('test') { useJUnitPlatform() }
+tasks.named('jar') {
+    archiveFileName = "saintsdragons-${project.version}+neoforge-${rootProject.minecraft_version}.jar"
+    from(rootProject.file('LICENSE.md'))
+    from(rootProject.file('CREDIT.md'))
+}
+
+// Fail on unresolved dependencies: Gradle's reporting-only dependencies task can
+// print FAILED entries while itself exiting successfully.
+tasks.register('resolveMigrationDependencies') {
+    group = 'verification'
+    description = 'Resolves the complete production compile and runtime classpaths.'
+    doLast {
+        [configurations.compileClasspath, configurations.runtimeClasspath].each { config ->
+            def resolved = config.resolve()
+            logger.lifecycle("Resolved ${config.name}: ${resolved.size()} files")
+        }
+    }
+}

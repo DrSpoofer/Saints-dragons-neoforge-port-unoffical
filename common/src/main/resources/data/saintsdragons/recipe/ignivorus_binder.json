@@ -1,0 +1,26 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "T T",
+    "NCN",
+    "SNS"
+  ],
+  "key": {
+    "N": {
+      "item": "minecraft:netherite_ingot"
+    },
+    "C": {
+      "item": "saintsdragons:dragon_binder_core"
+    },
+    "S": {
+      "item": "saintsdragons:ignivorus_scale"
+    },
+    "T": {
+      "item": "saintsdragons:ignivorus_tooth"
+    }
+  },
+  "result": {
+    "id": "saintsdragons:ignivorus_binder",
+    "count": 1
+  }
+}

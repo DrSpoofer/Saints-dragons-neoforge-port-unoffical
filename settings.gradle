@@ -1,0 +1,9 @@
+pluginManagement {
+    repositories {
+        gradlePluginPortal()
+        maven { url = 'https://maven.neoforged.net/releases' }
+    }
+}
+rootProject.name = 'saintsdragons-neoforge'
+// Keep the original source trees; only the requested NeoForge target is active.
+include('neoforge')

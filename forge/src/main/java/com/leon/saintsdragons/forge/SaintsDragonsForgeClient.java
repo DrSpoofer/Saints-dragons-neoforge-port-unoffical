@@ -1,0 +1,89 @@
+package com.leon.saintsdragons.forge;
+
+import com.leon.saintsdragons.client.init.CommonClientModEvents;
+import com.leon.saintsdragons.client.particle.DragonParticleShaders;
+import com.leon.saintsdragons.client.compat.RealCameraCompatibility;
+import com.leon.saintsdragons.common.SaintsDragonsCommon;
+import com.leon.saintsdragons.common.registry.ModBlocks;
+import com.leon.saintsdragons.common.registry.ModBlockEntities;
+import com.leon.saintsdragons.common.registry.ModRecipes;
+import com.leon.saintsdragons.forge.compat.EpicFightRenderCompatibility;
+import com.leon.saintsdragons.client.model.block.DraconianNucleusModel;
+import com.leon.saintsdragons.client.renderer.block.DraconianNucleusRenderer;
+import com.leon.saintsdragons.client.model.block.DraconicCrucibleEntity;
+import com.leon.saintsdragons.client.renderer.block.DraconicCrucibleRenderer;
+import net.minecraft.client.renderer.ItemBlockRenderTypes;
+import net.minecraft.client.renderer.RenderType;
+import net.minecraft.client.renderer.ShaderInstance;
+import com.mojang.blaze3d.vertex.DefaultVertexFormat;
+import net.minecraft.client.RecipeBookCategories;
+import net.neoforged.api.distmarker.Dist;
+import net.neoforged.neoforge.client.event.EntityRenderersEvent;
+import net.neoforged.neoforge.client.event.RegisterMenuScreensEvent;
+import net.neoforged.neoforge.client.event.RegisterRecipeBookCategoriesEvent;
+import net.neoforged.neoforge.client.event.RegisterShadersEvent;
+import net.neoforged.neoforge.client.event.RegisterClientReloadListenersEvent;
+import com.leon.saintsdragons.client.renderer.DragonAttachmentReloadListener;
+import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.fml.common.EventBusSubscriber;
+import net.neoforged.fml.event.lifecycle.FMLClientSetupEvent;
+
+import java.io.IOException;
+
+@EventBusSubscriber(modid = SaintsDragonsCommon.MOD_ID, value = Dist.CLIENT)
+public final class SaintsDragonsForgeClient {
+
+    @SubscribeEvent
+    public static void onRegisterReloadListeners(RegisterClientReloadListenersEvent event) {
+        event.registerReloadListener(new DragonAttachmentReloadListener());
+    }
+
+    @SubscribeEvent
+    public static void onRegisterShaders(RegisterShadersEvent event) {
+        try {
+            event.registerShader(new ShaderInstance(event.getResourceProvider(),
+                            DragonParticleShaders.IMPACT_GLOW, DefaultVertexFormat.PARTICLE),
+                    DragonParticleShaders::setImpactGlowShader);
+        } catch (IOException exception) {
+            SaintsDragonsCommon.LOGGER.error("Could not register the impact glow particle shader", exception);
+        }
+    }
+
+    @SubscribeEvent
+    public static void onRegisterRenderers(EntityRenderersEvent.RegisterRenderers event) {
+        CommonClientModEvents.registerEntityRenderers(event::registerEntityRenderer);
+        event.registerBlockEntityRenderer(ModBlockEntities.DRACONIAN_NUCLEUS.get(), DraconianNucleusRenderer::new);
+        event.registerBlockEntityRenderer(ModBlockEntities.DRACONIC_CRUCIBLE.get(), DraconicCrucibleRenderer::new);
+    }
+
+    @SubscribeEvent
+    public static void onRegisterLayerDefinitions(EntityRenderersEvent.RegisterLayerDefinitions event) {
+        event.registerLayerDefinition(DraconianNucleusModel.LAYER_LOCATION, DraconianNucleusModel::createBodyLayer);
+        event.registerLayerDefinition(DraconicCrucibleEntity.LAYER_LOCATION, DraconicCrucibleEntity::createBodyLayer);
+    }
+
+    @SubscribeEvent
+    public static void onRegisterRecipeBookCategories(RegisterRecipeBookCategoriesEvent event) {
+        event.registerRecipeCategoryFinder(
+                ModRecipes.DRACONIC_CRUCIBLE_SHAPED_TYPE.get(),
+                recipe -> RecipeBookCategories.UNKNOWN);
+        event.registerRecipeCategoryFinder(
+                ModRecipes.DRACONIC_CRUCIBLE_SMELTING_TYPE.get(),
+                recipe -> RecipeBookCategories.UNKNOWN);
+    }
+
+    @SubscribeEvent
+    public static void onRegisterMenuScreens(RegisterMenuScreensEvent event) {
+        CommonClientModEvents.registerMenuScreens(event::register);
+    }
+
+    @SubscribeEvent
+    public static void onClientSetup(FMLClientSetupEvent event) {
+        event.enqueueWork(() -> {
+            EpicFightRenderCompatibility.register();
+            RealCameraCompatibility.register();
+            ItemBlockRenderTypes.setRenderLayer(ModBlocks.DRACONIAN_PELLUCIDA.get(), RenderType.translucent());
+            ItemBlockRenderTypes.setRenderLayer(ModBlocks.DRACONIAN_NUCLEUS.get(), RenderType.translucent());
+        });
+    }
+}

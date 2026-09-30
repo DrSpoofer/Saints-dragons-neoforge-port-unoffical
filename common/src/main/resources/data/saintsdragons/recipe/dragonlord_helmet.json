@@ -1,0 +1,25 @@
+{
+  "type": "saintsdragons:draconic_crucible",
+  "pattern": [
+    "TTT",
+    "SAS",
+    "   "
+  ],
+  "key": {
+    "A": {
+      "item": "saintsdragons:dragonheart_alloy"
+    },
+    "T": {
+      "item": "saintsdragons:ignivorus_tooth"
+    },
+    "S": {
+      "item": "saintsdragons:ignivorus_scale"
+    }
+  },
+  "result": {
+    "id": "saintsdragons:dragonlord_helmet",
+    "count": 1
+  },
+  "required_heat_level": 3,
+  "processing_time": 1800
+}

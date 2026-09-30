@@ -1,0 +1,57 @@
+package com.leon.saintsdragons.common.particle;
+
+import com.leon.saintsdragons.common.registry.ModParticles;
+import com.mojang.serialization.Codec;
+import com.mojang.serialization.MapCodec;
+import com.mojang.serialization.codecs.RecordCodecBuilder;
+import net.minecraft.core.particles.ParticleOptions;
+import net.minecraft.core.particles.ParticleType;
+import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.network.RegistryFriendlyByteBuf;
+import net.minecraft.network.codec.StreamCodec;
+import org.jetbrains.annotations.NotNull;
+
+import javax.annotation.Nonnull;
+
+public record GroundDecalParticleData(boolean fissure, float yaw, float scale, int duration)
+        implements ParticleOptions {
+    /** Keeps the decal just above the supporting face without visibly floating. */
+    public static final double GROUND_OFFSET = 0.002D;
+    public static final float NORMAL_SCALE = 7.0F;
+    public static final int NORMAL_DURATION = 34;
+
+    public static final StreamCodec<RegistryFriendlyByteBuf, GroundDecalParticleData> STREAM_CODEC =
+            StreamCodec.of((buffer, data) -> data.writeToNetwork(buffer),
+                    buffer -> new GroundDecalParticleData(
+                            buffer.readBoolean(), buffer.readFloat(), buffer.readFloat(), buffer.readInt()));
+
+    public static MapCodec<GroundDecalParticleData> codec(
+            @SuppressWarnings("unused") ParticleType<GroundDecalParticleData> type) {
+        return RecordCodecBuilder.mapCodec(instance -> instance.group(
+                Codec.BOOL.fieldOf("fissure").forGetter(GroundDecalParticleData::fissure),
+                Codec.FLOAT.fieldOf("yaw").forGetter(GroundDecalParticleData::yaw),
+                Codec.FLOAT.fieldOf("scale").forGetter(GroundDecalParticleData::scale),
+                Codec.INT.fieldOf("duration").forGetter(GroundDecalParticleData::duration)
+        ).apply(instance, GroundDecalParticleData::new));
+    }
+
+    public static GroundDecalParticleData crack(float yaw) {
+        return new GroundDecalParticleData(false, yaw, NORMAL_SCALE, NORMAL_DURATION);
+    }
+
+    public static GroundDecalParticleData fissure(float yaw, float scale, int duration) {
+        return new GroundDecalParticleData(true, yaw, scale, duration);
+    }
+
+    public void writeToNetwork(@Nonnull FriendlyByteBuf buffer) {
+        buffer.writeBoolean(this.fissure);
+        buffer.writeFloat(this.yaw);
+        buffer.writeFloat(this.scale);
+        buffer.writeInt(this.duration);
+    }
+
+    @Override
+    public @NotNull ParticleType<GroundDecalParticleData> getType() {
+        return this.fissure ? ModParticles.GROUND_CRACK_FISSURE.get() : ModParticles.GROUND_CRACK.get();
+    }
+}
